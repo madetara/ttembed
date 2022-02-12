@@ -2,13 +2,13 @@ use anyhow::anyhow;
 use std::process::Command;
 use uuid::Uuid;
 
-use super::downloader::Downloader;
+use super::Downloader;
 
-pub struct TTDL {}
+pub struct Ttdl {}
 
-impl Downloader for TTDL {
+impl Downloader for Ttdl {
     fn download(url: &url::Url) -> anyhow::Result<String> {
-        let filename = format!("{0}.mp4", Uuid::new_v4().to_string());
+        let filename = format!("{0}.mp4", Uuid::new_v4());
 
         log::info!("downloading video from {url} to {filename}");
 

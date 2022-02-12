@@ -8,7 +8,8 @@ use teloxide::types::InputFile;
 use url::Url;
 
 mod downloader;
-use downloader::downloader::{Downloader, GenericDownloader};
+use downloader::generic::GenericDownloader;
+use downloader::Downloader;
 
 const MAX_SIZE: u64 = 50 * 1024 * 1024;
 
@@ -27,41 +28,40 @@ async fn main() {
         |message: Message, bot: AutoSend<Bot>| async move {
             let chat_id = message.chat.id;
             log::info!("received message from {chat_id}");
-            match message.text() {
-                Some(text) => {
-                    for url in get_valid_links(text) {
-                        log::info!("attempting to download video from {url}");
-                        match GenericDownloader::download(&url) {
-                            Ok(filename) => {
-                                match fs::metadata(&filename) {
-                                    Ok(metadata) => {
-                                        if metadata.len() < MAX_SIZE {
-                                            bot.send_video(message.chat.id, InputFile::file(&filename))
-                                                .reply_to_message_id(message.id)
-                                                .await?;
-                                        }
-                                    },
-                                    Err(err) => {
-                                        log::warn!("failed to get metadata for file {filename}. error: {err}");
+            if let Some(text) = message.text() {
+                for url in get_valid_links(text) {
+                    log::info!("attempting to download video from {url}");
+                    match GenericDownloader::download(&url) {
+                        Ok(filename) => {
+                            match fs::metadata(&filename) {
+                                Ok(metadata) => {
+                                    if metadata.len() < MAX_SIZE {
+                                        bot.send_video(message.chat.id, InputFile::file(&filename))
+                                            .reply_to_message_id(message.id)
+                                            .await?;
                                     }
                                 }
+                                Err(err) => {
+                                    log::warn!(
+                                        "failed to get metadata for file {filename}. error: {err}"
+                                    );
+                                }
+                            }
 
-                                match fs::remove_file(&filename).err() {
-                                    Some(err) => {
-                                        log::error!("failed to delete file. message: {err}");
-                                    }
-                                    None => {
-                                        log::info!("deleted file {filename}")
-                                    }
+                            match fs::remove_file(&filename).err() {
+                                Some(err) => {
+                                    log::error!("failed to delete file. message: {err}");
+                                }
+                                None => {
+                                    log::info!("deleted file {filename}")
                                 }
                             }
-                            Err(err) => {
-                                log::warn!("error ocured while downloading {url}. error: {err}");
-                            }
+                        }
+                        Err(err) => {
+                            log::warn!("error ocured while downloading {url}. error: {err}");
                         }
                     }
                 }
-                None => {}
             }
 
             respond(())
@@ -80,18 +80,14 @@ fn get_valid_links(text: &str) -> Vec<Url> {
     let mut result = vec![];
 
     for word in text.split(' ') {
-        match Url::parse(word) {
-            Ok(url) => match url.domain() {
-                Some(domain) => {
-                    if !ALLOWED_DOMAINS.contains(domain) {
-                        continue;
-                    }
-
-                    result.push(url);
+        if let Ok(url) = Url::parse(word) {
+            if let Some(domain) = url.domain() {
+                if !ALLOWED_DOMAINS.contains(domain) {
+                    continue;
                 }
-                None => {}
-            },
-            Err(_) => {}
+
+                result.push(url);
+            }
         }
     }
 
