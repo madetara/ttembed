@@ -59,9 +59,9 @@ jobs:
           username: root
           envs: TG_TOKEN, CR_PAT, GITHUB_RUN_NUMBER
           script: |
-            echo $CR_PAT | docker login ghcr.io -u madetara --password-stdin
-            docker stop ttembed
-            docker rm ttembed
-            docker run -d --name ttembed --restart unless-stopped \
+            echo $CR_PAT | podman login ghcr.io -u madetara --password-stdin
+            podman stop ttembed
+            podman rm ttembed
+            podman run -d --name ttembed --restart unless-stopped \
               --env TG_TOKEN="$TG_TOKEN" \
               "ghcr.io/madetara/ttembed/bot:1.0.$GITHUB_RUN_NUMBER"
