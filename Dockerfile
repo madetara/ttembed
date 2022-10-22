@@ -16,8 +16,8 @@ RUN cargo build --release --target x86_64-unknown-linux-musl --bin ttembedder
 FROM mcr.microsoft.com/playwright:focal as runtime
 RUN apt-get update && apt-get upgrade -y
 RUN apt-get install -y python3 python3-pip
-RUN python -m pip install --upgrade youtube-dl TikTokApi
-RUN python -m playwright install
+RUN python3 -m pip install --upgrade youtube-dl TikTokApi
+RUN python3 -m playwright install
 
 WORKDIR /app
 COPY --from=builder /app/vendor /app/vendor
