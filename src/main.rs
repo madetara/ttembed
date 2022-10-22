@@ -8,6 +8,7 @@ use teloxide::types::InputFile;
 use url::Url;
 
 mod downloader;
+
 use downloader::generic::GenericDownloader;
 use downloader::Downloader;
 
@@ -58,7 +59,7 @@ async fn main() {
                             }
                         }
                         Err(err) => {
-                            log::warn!("error ocured while downloading {url}. error: {err}");
+                            log::warn!("error occurred while downloading {url}. error: {err}");
                         }
                     }
                 }
@@ -67,13 +68,19 @@ async fn main() {
             respond(())
         },
     )
-    .await;
+        .await;
 }
 
 fn get_valid_links(text: &str) -> Vec<Url> {
     lazy_static! {
         static ref ALLOWED_DOMAINS: HashSet<&'static str> =
-            HashSet::from(["vm.tiktok.com", "tiktok.com", "youtube.com", "youtu.be"]);
+            HashSet::from([
+            "www.tiktok.com",
+            "vt.tiktok.com",
+            "vm.tiktok.com",
+            "tiktok.com",
+            "youtube.com",
+            "youtu.be"]);
     }
 
     log::info!("looking for links");

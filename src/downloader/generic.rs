@@ -12,6 +12,8 @@ impl Downloader for GenericDownloader {
         match url.domain() {
             Some("tiktok.com") => Ttdl::download(url),
             Some("vm.tiktok.com") => Ttdl::download(url),
+            Some("www.tiktok.com") => Ttdl::download(url),
+            Some("vt.tiktok.com") => Ttdl::download(url),
             Some("youtube.com") => Ytdl::download(url),
             Some("youtu.be") => Ytdl::download(url),
             None => Err(anyhow!("invalid link")),
