@@ -12,7 +12,7 @@ impl Downloader for Ttdl {
 
         log::info!("downloading video from {url} to {filename}");
 
-        match Command::new("python")
+        match Command::new("python3")
             .arg("vendor/tiktok.py")
             .arg(url.as_str())
             .arg(&filename)
