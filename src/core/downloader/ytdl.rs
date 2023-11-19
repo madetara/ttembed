@@ -19,7 +19,7 @@ pub async fn download(url: &url::Url) -> anyhow::Result<String> {
         .arg(&filename)
         .arg("-f")
         .arg("mp4")
-        .arg(format!("\"{0}\"", url.as_str()));
+        .arg(url.as_str());
 
     cmd.stdout(Stdio::piped());
     cmd.stderr(Stdio::piped());
