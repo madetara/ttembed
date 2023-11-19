@@ -11,9 +11,7 @@ impl Downloader for Ytdl {
 
         log::info!("downloading video from {url} to {filename}");
 
-        match Command::new("youtube-dl")
-            .arg("--default-search")
-            .arg("auto")
+        match Command::new("yt-dlp")
             .arg("--max-filesize")
             .arg("50M")
             .arg("-o")

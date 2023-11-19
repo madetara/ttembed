@@ -13,14 +13,10 @@ RUN cargo chef cook --release --target x86_64-unknown-linux-musl --recipe-path r
 COPY . .
 RUN cargo build --release --target x86_64-unknown-linux-musl --bin ttembedder
 
-FROM mcr.microsoft.com/playwright:focal as runtime
-RUN apt-get update && apt-get upgrade -y
-RUN apt-get install -y python3 python3-pip
-RUN python3 -m pip install --upgrade youtube-dl TikTokApi
-RUN python3 -m playwright install
+FROM alpine:3.18 as runtime
+RUN apk -U add yt-dlp
 
 WORKDIR /app
-COPY --from=builder /app/vendor /app/vendor
 COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/ttembedder ttembedder
 ENV RUST_LOG="info"
 ENTRYPOINT [ "/app/ttembedder" ]

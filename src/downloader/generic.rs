@@ -1,7 +1,6 @@
 use anyhow::anyhow;
 use url::Url;
 
-use super::ttdl::Ttdl;
 use super::ytdl::Ytdl;
 use super::Downloader;
 
