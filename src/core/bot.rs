@@ -113,7 +113,7 @@ fn get_valid_links(text: &str) -> Vec<Url> {
     log::info!("looking for links");
     let mut result = vec![];
 
-    for word in text.split(' ') {
+    for word in text.split_whitespace() {
         if let Ok(url) = Url::parse(word) {
             if let Some(domain) = url.domain() {
                 if !ALLOWED_DOMAINS.contains(domain) {
