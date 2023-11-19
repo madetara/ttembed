@@ -98,7 +98,9 @@ fn get_valid_links(text: &str) -> Vec<Url> {
             "vm.tiktok.com",
             "tiktok.com",
             "youtube.com",
-            "youtu.be"
+            "youtu.be",
+            "x.com",
+            "twitter.com"
         ]);
     }
 
