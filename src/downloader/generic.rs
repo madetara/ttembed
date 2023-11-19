@@ -10,10 +10,10 @@ pub struct GenericDownloader {}
 impl Downloader for GenericDownloader {
     fn download(url: &Url) -> anyhow::Result<String> {
         match url.domain() {
-            Some("tiktok.com") => Ttdl::download(url),
-            Some("vm.tiktok.com") => Ttdl::download(url),
-            Some("www.tiktok.com") => Ttdl::download(url),
-            Some("vt.tiktok.com") => Ttdl::download(url),
+            Some("tiktok.com") => Ytdl::download(url),
+            Some("vm.tiktok.com") => Ytdl::download(url),
+            Some("www.tiktok.com") => Ytdl::download(url),
+            Some("vt.tiktok.com") => Ytdl::download(url),
             Some("youtube.com") => Ytdl::download(url),
             Some("youtu.be") => Ytdl::download(url),
             None => Err(anyhow!("invalid link")),
