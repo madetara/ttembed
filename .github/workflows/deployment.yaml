@@ -58,6 +58,7 @@ jobs:
             docker stop ttembed
             docker rm ttembed
             docker run -d --name ttembed --restart unless-stopped -p $BOT_PORT:3001 \
+              --network="ig-bridge_ig_bridge" \
               --env TG_TOKEN="$TG_TOKEN" \
               --env BOT_URL="$BOT_URL" \
               --env BOT_PORT="$BOT_PORT" \
