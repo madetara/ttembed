@@ -42,6 +42,8 @@ jobs:
     needs: build_and_push
     env:
       TG_TOKEN: ${{ secrets.TG_TOKEN }}
+      BOT_URL: ${{ secrets.BOT_URL }}
+      BOT_PORT: ${{ secrets.BOT_PORT }}
       CR_PAT: ${{ secrets.CR_PAT }}
     steps:
       - name: Deploy image
@@ -50,11 +52,13 @@ jobs:
           host: ${{ secrets.HOST }}
           key: ${{ secrets.PRIVATE_KEY }}
           username: root
-          envs: TG_TOKEN, CR_PAT, GITHUB_RUN_NUMBER
+          envs: TG_TOKEN, CR_PAT, GITHUB_RUN_NUMBER, BOT_PORT, BOT_URL
           script: |
             echo $CR_PAT | docker login ghcr.io -u madetara --password-stdin
             docker stop ttembed
             docker rm ttembed
-            docker run -d --name ttembed --restart unless-stopped \
+            docker run -d --name ttembed --restart unless-stopped -p $BOT_PORT:3001 \
               --env TG_TOKEN="$TG_TOKEN" \
+              --env BOT_URL="$BOT_URL" \
+              --env BOT_PORT="$BOT_PORT" \
               "ghcr.io/madetara/ttembed/bot:1.0.$GITHUB_RUN_NUMBER"
