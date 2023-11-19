@@ -106,7 +106,10 @@ fn get_valid_links(text: &str) -> HashSet<Url> {
             "www.x.com",
             "www.twitter.com",
             "x.com",
-            "twitter.com"
+            "twitter.com",
+            // instagram
+            "instagram.com",
+            "www.instagram.com"
         ]);
     }
 
