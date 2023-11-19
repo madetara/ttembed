@@ -5,7 +5,7 @@ use teloxide::{prelude::*, types::InputFile, update_listeners::webhooks};
 use tokio::fs;
 use url::Url;
 
-use crate::core::downloader::{generic::GenericDownloader, Downloader};
+use crate::core::downloader::ytdl;
 
 const MAX_SIZE: u64 = 50 * 1024 * 1024;
 
@@ -51,7 +51,7 @@ async fn handle_message(bot: &Bot, msg: &Message) {
     if let Some(text) = msg.text() {
         for url in get_valid_links(text) {
             log::info!("attempting to download video from {url}");
-            match GenericDownloader::download(&url) {
+            match ytdl::download(&url).await {
                 Ok(filename) => {
                     match fs::metadata(&filename).await {
                         Ok(metadata) => {
