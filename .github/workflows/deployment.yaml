@@ -45,6 +45,9 @@ jobs:
       BOT_URL: ${{ secrets.BOT_URL }}
       BOT_PORT: ${{ secrets.BOT_PORT }}
       CR_PAT: ${{ secrets.CR_PAT }}
+      PROXY_USER: ${{ secrets.PROXY_USER }}
+      PROXY_PASS: ${{ secrets.PROXY_PASS }}
+      PROXY_ADDRESS: ${{ secrets.PROXY_ADDRESS }}
     steps:
       - name: Deploy image
         uses: appleboy/ssh-action@v1.0.0
@@ -52,7 +55,7 @@ jobs:
           host: ${{ secrets.HOST }}
           key: ${{ secrets.PRIVATE_KEY }}
           username: root
-          envs: TG_TOKEN, CR_PAT, GITHUB_RUN_NUMBER, BOT_PORT, BOT_URL
+          envs: TG_TOKEN, CR_PAT, GITHUB_RUN_NUMBER, BOT_PORT, BOT_URL, PROXY_USER, PROXY_PASS, PROXY_ADDRESS
           script: |
             echo $CR_PAT | docker login ghcr.io -u madetara --password-stdin
             docker stop ttembed
@@ -61,4 +64,7 @@ jobs:
               --env TG_TOKEN="$TG_TOKEN" \
               --env BOT_URL="$BOT_URL" \
               --env BOT_PORT="$BOT_PORT" \
+              --env PROXY_USER="$PROXY_USER" \
+              --env PROXY_PASS="$PROXY_PASS" \
+              --env PROXY_ADDRESS="$PROXY_ADDRESS" \
               "ghcr.io/madetara/ttembed/bot:1.0.$GITHUB_RUN_NUMBER"

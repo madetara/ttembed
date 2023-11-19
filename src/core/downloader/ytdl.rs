@@ -1,28 +1,11 @@
-use std::process::Stdio;
+use tokio::io::{AsyncBufReadExt, BufReader};
 
-use tokio::{
-    io::{AsyncBufReadExt, BufReader},
-    process::Command,
-};
-use uuid::Uuid;
+use crate::core::downloader::cmd_builder;
 
 pub async fn download(url: &url::Url) -> anyhow::Result<String> {
-    let filename = format!("{0}.mp4", Uuid::new_v4());
+    log::info!("downloading video from {url}");
 
-    log::info!("downloading video from {url} to {filename}");
-
-    let mut cmd = Command::new("yt-dlp");
-
-    cmd.arg("--max-filesize")
-        .arg("50M")
-        .arg("-o")
-        .arg(&filename)
-        .arg("-f")
-        .arg("mp4")
-        .arg(url.as_str());
-
-    cmd.stdout(Stdio::piped());
-    cmd.stderr(Stdio::piped());
+    let (mut cmd, filename) = cmd_builder::build_command(url);
 
     let mut child = cmd.spawn()?;
 
