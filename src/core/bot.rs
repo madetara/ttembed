@@ -90,7 +90,7 @@ async fn handle_message(bot: &Bot, msg: &Message) {
     }
 }
 
-fn get_valid_links(text: &str) -> Vec<Url> {
+fn get_valid_links(text: &str) -> HashSet<Url> {
     lazy_static! {
         static ref ALLOWED_DOMAINS: HashSet<&'static str> = HashSet::from([
             // tiktok
@@ -111,7 +111,7 @@ fn get_valid_links(text: &str) -> Vec<Url> {
     }
 
     log::info!("looking for links");
-    let mut result = vec![];
+    let mut result = HashSet::new();
 
     for word in text.split_whitespace() {
         if let Ok(url) = Url::parse(word) {
@@ -120,7 +120,7 @@ fn get_valid_links(text: &str) -> Vec<Url> {
                     continue;
                 }
 
-                result.push(url);
+                result.insert(url);
             }
         }
     }
