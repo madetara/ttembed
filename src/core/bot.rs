@@ -93,12 +93,18 @@ async fn handle_message(bot: &Bot, msg: &Message) {
 fn get_valid_links(text: &str) -> Vec<Url> {
     lazy_static! {
         static ref ALLOWED_DOMAINS: HashSet<&'static str> = HashSet::from([
+            // tiktok
             "www.tiktok.com",
             "vt.tiktok.com",
             "vm.tiktok.com",
             "tiktok.com",
+            // youtube
             "youtube.com",
             "youtu.be",
+            "www.youtube.com",
+            // twitter
+            "www.x.com",
+            "www.twitter.com",
             "x.com",
             "twitter.com"
         ]);
