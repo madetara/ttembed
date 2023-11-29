@@ -63,7 +63,7 @@ async fn handle_message(bot: &Bot, msg: &Message) {
                                 {
                                     Ok(_) => {}
                                     Err(err) => {
-                                        log::error!("failed to send video. error: {err}")
+                                        log::error!("failed to send video. error: {err}");
                                     }
                                 }
                             }
@@ -78,7 +78,7 @@ async fn handle_message(bot: &Bot, msg: &Message) {
                             log::error!("failed to delete file. message: {err}");
                         }
                         None => {
-                            log::info!("deleted file {filename}")
+                            log::info!("deleted file {filename}");
                         }
                     }
                 }

@@ -42,8 +42,7 @@ fn add_domain_specific_options(cmd: &mut Command, url: &url::Url) {
 
 fn map_domain(url: &url::Url) -> Domain {
     match url.domain() {
-        Some("instagram.com") => Domain::Instagram,
-        Some("www.instagram.com") => Domain::Instagram,
+        Some("instagram.com" | "www.instagram.com") => Domain::Instagram,
         _ => Domain::Default,
     }
 }
@@ -54,7 +53,6 @@ fn get_socks_proxy_url() -> anyhow::Result<String> {
     let proxy_address = env::var("PROXY_ADDRESS")?;
 
     Ok(format!(
-        "socks5://{0}:{1}@{2}/",
-        proxy_user, proxy_pass, proxy_address
+        "socks5://{proxy_user}:{proxy_pass}@{proxy_address}/"
     ))
 }
