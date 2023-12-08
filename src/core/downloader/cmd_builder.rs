@@ -16,7 +16,7 @@ pub fn build_command(url: &url::Url) -> (Command, String) {
     let filename = format!("{0}.mp4", Uuid::new_v4());
 
     cmd.arg("--max-filesize")
-        .arg("50M")
+        .arg("5G")
         .arg("-o")
         .arg(&filename)
         .arg("-f")
