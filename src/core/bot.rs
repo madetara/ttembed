@@ -52,9 +52,9 @@ async fn handle_message(bot: &Bot, msg: &Message) {
     if let Some(text) = msg.text() {
         for url in get_valid_links(text) {
             tracing::info!("attempting to download video from {url}");
-            // if !handle_download_via_stream(bot, msg, &url).await {
-            handle_download_via_file(bot, msg, &url).await;
-            // }
+            if !handle_download_via_stream(bot, msg, &url).await {
+                handle_download_via_file(bot, msg, &url).await;
+            }
         }
     }
 }
