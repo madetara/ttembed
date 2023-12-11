@@ -51,41 +51,73 @@ async fn handle_message(bot: &Bot, msg: &Message) {
     if let Some(text) = msg.text() {
         for url in get_valid_links(text) {
             log::info!("attempting to download video from {url}");
-            match ytdl::download(&url).await {
-                Ok(filename) => {
-                    match fs::metadata(&filename).await {
-                        Ok(metadata) => {
-                            if metadata.len() <= MAX_SIZE {
-                                match bot
-                                    .send_video(msg.chat.id, InputFile::file(&filename))
-                                    .reply_to_message_id(msg.id)
-                                    .await
-                                {
-                                    Ok(_) => {}
-                                    Err(err) => {
-                                        log::error!("failed to send video. error: {err}");
-                                    }
-                                }
-                            }
-                        }
-                        Err(err) => {
-                            log::warn!("failed to get metadata for file {filename}. error: {err}");
-                        }
-                    }
+            if !handle_download_via_stream(bot, msg, &url).await {
+                handle_download_via_file(bot, msg, &url).await;
+            }
+        }
+    }
+}
 
-                    match fs::remove_file(&filename).await.err() {
-                        Some(err) => {
-                            log::error!("failed to delete file. message: {err}");
-                        }
-                        None => {
-                            log::info!("deleted file {filename}");
+async fn handle_download_via_stream(bot: &Bot, msg: &Message, url: &url::Url) -> bool {
+    log::info!("downloading via stream");
+
+    match ytdl::download_stream(url).await {
+        Ok(stream) => {
+            match bot
+                .send_video(msg.chat.id, InputFile::read(stream))
+                .reply_to_message_id(msg.id)
+                .await
+            {
+                Ok(_) => true,
+                Err(err) => {
+                    log::error!("failed to send video. error: {err}");
+                    false
+                }
+            }
+        }
+        Err(err) => {
+            log::warn!("error occurred while downloading {url}. error: {err}");
+            false
+        }
+    }
+}
+
+async fn handle_download_via_file(bot: &Bot, msg: &Message, url: &url::Url) {
+    log::info!("downloading via file");
+
+    match ytdl::download_file(url).await {
+        Ok(filename) => {
+            match fs::metadata(&filename).await {
+                Ok(metadata) => {
+                    if metadata.len() <= MAX_SIZE {
+                        match bot
+                            .send_video(msg.chat.id, InputFile::file(&filename))
+                            .reply_to_message_id(msg.id)
+                            .await
+                        {
+                            Ok(_) => {}
+                            Err(err) => {
+                                log::error!("failed to send video. error: {err}");
+                            }
                         }
                     }
                 }
                 Err(err) => {
-                    log::warn!("error occurred while downloading {url}. error: {err}");
+                    log::warn!("failed to get metadata for file {filename}. error: {err}");
                 }
             }
+
+            match fs::remove_file(&filename).await.err() {
+                Some(err) => {
+                    log::error!("failed to delete file. message: {err}");
+                }
+                None => {
+                    log::info!("deleted file {filename}");
+                }
+            }
+        }
+        Err(err) => {
+            log::warn!("error occurred while downloading {url}. error: {err}");
         }
     }
 }

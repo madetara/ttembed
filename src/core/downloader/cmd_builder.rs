@@ -1,32 +1,39 @@
 use std::{env, process::Stdio};
 
 use tokio::process::Command;
-use uuid::Uuid;
 
 enum Domain {
     Instagram,
     Default,
 }
 
-pub fn build_command(url: &url::Url) -> (Command, String) {
+pub enum DownloadOption<'a> {
+    File(&'a str),
+    Stream,
+}
+
+pub fn build_command(url: &url::Url, option: &DownloadOption) -> Command {
     let mut cmd = Command::new("yt-dlp");
 
     add_domain_specific_options(&mut cmd, url);
 
-    let filename = format!("{0}.mp4", Uuid::new_v4());
+    cmd.arg("--max-filesize").arg("5G");
 
-    cmd.arg("--max-filesize")
-        .arg("5G")
-        .arg("-o")
-        .arg(&filename)
-        .arg("-f")
-        .arg("mp4")
-        .arg(url.as_str());
+    match option {
+        DownloadOption::File(filename) => {
+            cmd.arg("-o").arg(filename);
+        }
+        DownloadOption::Stream => {
+            cmd.arg("-o").arg("-");
+        }
+    }
+
+    cmd.arg("-f").arg("mp4").arg(url.as_str());
 
     cmd.stdout(Stdio::piped());
     cmd.stderr(Stdio::piped());
 
-    (cmd, filename)
+    cmd
 }
 
 fn add_domain_specific_options(cmd: &mut Command, url: &url::Url) {
