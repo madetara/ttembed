@@ -35,6 +35,14 @@ fn add_domain_specific_options(cmd: &mut Command, url: &url::Url) {
             if let Ok(proxy_url) = get_socks_proxy_url() {
                 cmd.arg("--proxy").arg(proxy_url);
             }
+            if let Ok(instagram_login) = env::var("INSTAGRAM_LOGIN") {
+                if let Ok(instagram_pass) = env::var("INSTAGRAM_PASS") {
+                    cmd.arg("--username");
+                    cmd.arg(instagram_login);
+                    cmd.arg("--password");
+                    cmd.arg(instagram_pass);
+                }
+            }
         }
         Domain::Default => {}
     }
