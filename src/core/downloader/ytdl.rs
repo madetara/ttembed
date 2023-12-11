@@ -80,9 +80,9 @@ pub async fn download_stream(url: &url::Url) -> anyhow::Result<impl AsyncRead> {
         }
     });
 
-    // while let Some(line) = err_reader.next_line().await? {
-    //     tracing::warn!("{line}");
-    // }
+    while let Some(line) = err_reader.next_line().await? {
+        tracing::warn!("{line}");
+    }
 
     Ok(out_reader)
 }

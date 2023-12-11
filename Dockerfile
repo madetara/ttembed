@@ -14,7 +14,9 @@ COPY . .
 RUN cargo build --release --target x86_64-unknown-linux-musl --bin ttembedder
 
 FROM alpine:3.18 as runtime
-RUN apk -U add yt-dlp
+RUN apk -U add yt-dlp bash
+# some of yt-dlp features don't work in sh for some reason
+ENV SHELL="/bin/bash"
 
 WORKDIR /app
 COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/ttembedder ttembedder
