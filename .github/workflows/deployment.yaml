@@ -71,4 +71,5 @@ jobs:
               --env PROXY_ADDRESS="$PROXY_ADDRESS" \
               --env INSTAGRAM_LOGIN="$INSTAGRAM_LOGIN" \
               --env INSTAGRAM_PASS="$INSTAGRAM_PASS" \
+              -v "/root/workload/ttembed:/workload/logs" \
               "ghcr.io/madetara/ttembed/bot:1.0.$GITHUB_RUN_NUMBER"
