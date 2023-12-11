@@ -5,9 +5,9 @@ mod core;
 
 #[tokio::main]
 async fn main() {
-    pretty_env_logger::init();
+    tracing_subscriber::fmt::init();
 
-    log::info!("Starting...");
+    tracing::info!("Starting...");
 
     core::bot::run().await.unwrap();
 }

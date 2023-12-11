@@ -4,7 +4,7 @@ use uuid::Uuid;
 use crate::core::downloader::cmd_builder::{self, DownloadOption};
 
 pub async fn download_file(url: &url::Url) -> anyhow::Result<String> {
-    log::info!("downloading video from {url}");
+    tracing::info!("downloading video from {url}");
 
     let filename = format!("{0}.mp4", Uuid::new_v4());
 
@@ -29,27 +29,27 @@ pub async fn download_file(url: &url::Url) -> anyhow::Result<String> {
     tokio::spawn(async move {
         match child.wait().await {
             Ok(status) => {
-                log::info!("process exited with status '{status}'");
+                tracing::info!("process exited with status '{status}'");
             }
             Err(err) => {
-                log::error!("failed to wait for process completion. error: {err}");
+                tracing::error!("failed to wait for process completion. error: {err}");
             }
         }
     });
 
     while let Some(line) = out_reader.next_line().await? {
-        log::info!("{line}");
+        tracing::info!("{line}");
     }
 
     while let Some(line) = err_reader.next_line().await? {
-        log::warn!("{line}");
+        tracing::warn!("{line}");
     }
 
     Ok(filename)
 }
 
 pub async fn download_stream(url: &url::Url) -> anyhow::Result<impl AsyncRead + Send + Unpin> {
-    log::info!("downloading video from {url}");
+    tracing::info!("downloading video from {url}");
 
     let mut cmd = cmd_builder::build_command(url, &DownloadOption::Stream);
 
@@ -72,16 +72,16 @@ pub async fn download_stream(url: &url::Url) -> anyhow::Result<impl AsyncRead + 
     tokio::spawn(async move {
         match child.wait().await {
             Ok(status) => {
-                log::info!("process exited with status '{status}'");
+                tracing::info!("process exited with status '{status}'");
             }
             Err(err) => {
-                log::error!("failed to wait for process completion. error: {err}");
+                tracing::error!("failed to wait for process completion. error: {err}");
             }
         }
     });
 
     while let Some(line) = err_reader.next_line().await? {
-        log::warn!("{line}");
+        tracing::warn!("{line}");
     }
 
     Ok(out_reader)

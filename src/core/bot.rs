@@ -3,6 +3,8 @@ use std::{collections::HashSet, env};
 use anyhow::Result;
 use teloxide::{prelude::*, types::InputFile, update_listeners::webhooks};
 use tokio::fs;
+use tracing::instrument;
+use ulid::Ulid;
 use url::Url;
 
 use crate::core::downloader::ytdl;
@@ -33,9 +35,6 @@ pub async fn run() -> Result<()> {
     teloxide::repl_with_listener(
         bot,
         |bot: Bot, msg: Message| async move {
-            let chat_id = msg.chat.id;
-            log::info!("received message from {chat_id}");
-
             handle_message(&bot, &msg).await;
 
             Ok(())
@@ -47,10 +46,12 @@ pub async fn run() -> Result<()> {
     Ok(())
 }
 
+#[instrument(skip(bot, msg), fields(chat_id = %msg.chat.id, trace_id = Ulid::new().to_string()))]
 async fn handle_message(bot: &Bot, msg: &Message) {
+    tracing::info!("handling message");
     if let Some(text) = msg.text() {
         for url in get_valid_links(text) {
-            log::info!("attempting to download video from {url}");
+            tracing::info!("attempting to download video from {url}");
             if !handle_download_via_stream(bot, msg, &url).await {
                 handle_download_via_file(bot, msg, &url).await;
             }
@@ -59,7 +60,7 @@ async fn handle_message(bot: &Bot, msg: &Message) {
 }
 
 async fn handle_download_via_stream(bot: &Bot, msg: &Message, url: &url::Url) -> bool {
-    log::info!("downloading via stream");
+    tracing::info!("downloading via stream");
 
     match ytdl::download_stream(url).await {
         Ok(stream) => {
@@ -70,20 +71,20 @@ async fn handle_download_via_stream(bot: &Bot, msg: &Message, url: &url::Url) ->
             {
                 Ok(_) => true,
                 Err(err) => {
-                    log::error!("failed to send video. error: {err}");
+                    tracing::error!("failed to send video. error: {err}");
                     false
                 }
             }
         }
         Err(err) => {
-            log::warn!("error occurred while downloading {url}. error: {err}");
+            tracing::warn!("error occurred while downloading {url}. error: {err}");
             false
         }
     }
 }
 
 async fn handle_download_via_file(bot: &Bot, msg: &Message, url: &url::Url) {
-    log::info!("downloading via file");
+    tracing::info!("downloading via file");
 
     match ytdl::download_file(url).await {
         Ok(filename) => {
@@ -97,27 +98,27 @@ async fn handle_download_via_file(bot: &Bot, msg: &Message, url: &url::Url) {
                         {
                             Ok(_) => {}
                             Err(err) => {
-                                log::error!("failed to send video. error: {err}");
+                                tracing::error!("failed to send video. error: {err}");
                             }
                         }
                     }
                 }
                 Err(err) => {
-                    log::warn!("failed to get metadata for file {filename}. error: {err}");
+                    tracing::warn!("failed to get metadata for file {filename}. error: {err}");
                 }
             }
 
             match fs::remove_file(&filename).await.err() {
                 Some(err) => {
-                    log::error!("failed to delete file. message: {err}");
+                    tracing::error!("failed to delete file. message: {err}");
                 }
                 None => {
-                    log::info!("deleted file {filename}");
+                    tracing::info!("deleted file {filename}");
                 }
             }
         }
         Err(err) => {
-            log::warn!("error occurred while downloading {url}. error: {err}");
+            tracing::warn!("error occurred while downloading {url}. error: {err}");
         }
     }
 }
@@ -154,7 +155,7 @@ fn get_valid_links(text: &str) -> HashSet<Url> {
         ]);
     }
 
-    log::info!("looking for links");
+    tracing::info!("looking for links");
     let mut result = HashSet::new();
 
     for word in text.split_whitespace() {
@@ -170,7 +171,7 @@ fn get_valid_links(text: &str) -> HashSet<Url> {
     }
 
     let link_count = result.len();
-    log::info!("found {link_count} valid links");
+    tracing::info!("found {link_count} valid links");
 
     result
 }
