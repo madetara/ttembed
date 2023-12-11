@@ -48,7 +48,7 @@ pub async fn download_file(url: &url::Url) -> anyhow::Result<String> {
     Ok(filename)
 }
 
-pub async fn download_stream(url: &url::Url) -> anyhow::Result<impl AsyncRead + Send + Unpin> {
+pub async fn download_stream(url: &url::Url) -> anyhow::Result<impl AsyncRead> {
     tracing::info!("downloading video from {url}");
 
     let mut cmd = cmd_builder::build_command(url, &DownloadOption::Stream);
@@ -80,9 +80,9 @@ pub async fn download_stream(url: &url::Url) -> anyhow::Result<impl AsyncRead + 
         }
     });
 
-    while let Some(line) = err_reader.next_line().await? {
-        tracing::warn!("{line}");
-    }
+    // while let Some(line) = err_reader.next_line().await? {
+    //     tracing::warn!("{line}");
+    // }
 
     Ok(out_reader)
 }
