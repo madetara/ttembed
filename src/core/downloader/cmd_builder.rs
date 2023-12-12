@@ -9,7 +9,6 @@ enum Domain {
 
 pub enum DownloadOption<'a> {
     File(&'a str),
-    Stream,
 }
 
 pub fn build_command(url: &url::Url, option: &DownloadOption) -> Command {
@@ -22,9 +21,6 @@ pub fn build_command(url: &url::Url, option: &DownloadOption) -> Command {
     match option {
         DownloadOption::File(filename) => {
             cmd.arg("-o").arg(filename);
-        }
-        DownloadOption::Stream => {
-            cmd.arg("-o").arg("-");
         }
     }
 
