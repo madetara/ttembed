@@ -1,4 +1,9 @@
-use tokio::io::{AsyncBufReadExt, AsyncRead, BufReader};
+use std::process::Stdio;
+
+use tokio::{
+    io::{AsyncBufReadExt, AsyncRead, BufReader},
+    process::Command,
+};
 use uuid::Uuid;
 
 use crate::core::downloader::cmd_builder::{self, DownloadOption};
@@ -51,9 +56,17 @@ pub async fn download_file(url: &url::Url) -> anyhow::Result<String> {
 pub async fn download_stream(url: &url::Url) -> anyhow::Result<impl AsyncRead> {
     tracing::info!("downloading video from {url}");
 
-    let mut cmd = cmd_builder::build_command(url, &DownloadOption::Stream);
+    let cmd = cmd_builder::build_command(url, &DownloadOption::Stream);
 
-    let mut child = cmd.spawn()?;
+    let mut wrapped_cmd = Command::new("bash");
+
+    wrapped_cmd
+        .arg("-C")
+        .arg(format!("{cmd:?}"))
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+
+    let mut child = wrapped_cmd.spawn()?;
 
     let stdout = child
         .stdout
