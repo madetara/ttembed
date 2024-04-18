@@ -125,7 +125,12 @@ fn get_valid_links(text: &str) -> HashSet<Url> {
             "vkontakte.ru",
             "www.vkontakte.ru",
             "vk.cc",
-            "www.vk.cc"
+            "www.vk.cc",
+            // reddit
+            "www.reddit.com",
+            "reddit.com",
+            "www.redd.it",
+            "redd.it"
         ]);
     }
 
