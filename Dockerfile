@@ -17,6 +17,7 @@ FROM alpine:3.18 as runtime
 RUN apk -U add yt-dlp bash
 # some of yt-dlp features don't work in sh for some reason
 ENV SHELL="/bin/bash"
+RUN yt-dlp --update-to nightly
 
 WORKDIR /app
 COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/ttembedder ttembedder
