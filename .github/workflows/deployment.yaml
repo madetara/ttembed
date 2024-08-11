@@ -51,6 +51,7 @@ jobs:
       PROXY_ADDRESS: ${{ secrets.PROXY_ADDRESS }}
       INSTAGRAM_LOGIN: ${{ secrets.INSTAGRAM_LOGIN }}
       INSTAGRAM_PASS: ${{ secrets.INSTAGRAM_PASS }}
+      UPTRACE_DSN: ${{ secrets.UPTRACE_DSN }}
     steps:
       - name: Deploy image
         uses: appleboy/ssh-action@v1.0.0
@@ -58,7 +59,7 @@ jobs:
           host: ${{ secrets.HOST }}
           key: ${{ secrets.PRIVATE_KEY }}
           username: root
-          envs: TG_TOKEN, CR_PAT, GITHUB_RUN_NUMBER, BOT_PORT, BOT_URL, PROXY_USER, PROXY_PASS, PROXY_ADDRESS, INSTAGRAM_LOGIN, INSTAGRAM_PASS
+          envs: TG_TOKEN, CR_PAT, GITHUB_RUN_NUMBER, BOT_PORT, BOT_URL, PROXY_USER, PROXY_PASS, PROXY_ADDRESS, INSTAGRAM_LOGIN, INSTAGRAM_PASS, UPTRACE_DSN
           script: |
             echo $CR_PAT | docker login ghcr.io -u madetara --password-stdin
             docker stop ttembed
@@ -72,5 +73,6 @@ jobs:
               --env PROXY_ADDRESS="$PROXY_ADDRESS" \
               --env INSTAGRAM_LOGIN="$INSTAGRAM_LOGIN" \
               --env INSTAGRAM_PASS="$INSTAGRAM_PASS" \
+              --env UPTRACE_DSN="$UPTRACE_DSN" \
               -v "/root/workload/ttembed:/workload/logs" \
               "ghcr.io/madetara/ttembed/bot:1.0.$GITHUB_RUN_NUMBER"

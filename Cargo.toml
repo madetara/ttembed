@@ -15,16 +15,22 @@ test = false
 [dependencies]
 anyhow = "1.0"
 lazy_static = "1.5"
+opentelemetry = "0.24"
+opentelemetry-otlp = { version = "0.17", features = ["grpc-tonic"] }
+opentelemetry_sdk = { version = "0.24", features = ["rt-tokio"] }
+opentelemetry-stdout = { version = "0.5.0", features = ["trace"] }
 teloxide = { version = "0.12", features = ["macros", "webhooks-axum"] }
 tracing = "0.1"
 tracing-appender = "0.2"
 tracing-futures = "0.2"
+tracing-opentelemetry = "0.25"
 tracing-subscriber = "0.3"
 tokio = { version = "1.39", features = [
     "rt-multi-thread",
     "macros",
     "process",
 ] }
+tonic = "0.12"
 url = "2.5"
 uuid = "1.10"
 ulid = "1.1"

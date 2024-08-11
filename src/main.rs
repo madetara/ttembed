@@ -1,4 +1,17 @@
-use tracing_appender::rolling::{RollingFileAppender, Rotation};
+use std::time::Duration;
+
+use opentelemetry::trace::TraceError;
+use opentelemetry::trace::TracerProvider as _;
+use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_sdk::resource::{
+    EnvResourceDetector, SdkProvidedResourceDetector, TelemetryResourceDetector,
+};
+use opentelemetry_sdk::trace::Config;
+use opentelemetry_sdk::Resource;
+use tonic::metadata::MetadataMap;
+use tracing::span;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::Registry;
 
 #[macro_use]
 extern crate lazy_static;
@@ -7,17 +20,53 @@ mod core;
 
 #[tokio::main]
 async fn main() {
-    let file_appender = RollingFileAppender::builder()
-        .filename_prefix("hekapoo.log")
-        .rotation(Rotation::DAILY)
-        .max_log_files(3)
-        .build("/workload/logs")
-        .expect("failed to initialize file logger");
-    let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
+    let dsn = std::env::var("UPTRACE_DSN").expect("UPTRACE_DSN not set");
+    let tracer_provider = init_tracer(dsn.as_str()).expect("failed to initialize tracer");
+    let tracer = tracer_provider.tracer("ttembed");
 
-    tracing_subscriber::fmt().with_writer(non_blocking).init();
+    let telemetry = tracing_opentelemetry::layer().with_tracer(tracer);
 
-    tracing::info!("Starting...");
+    let subscriber = Registry::default().with(telemetry);
 
-    core::bot::run().await.unwrap();
+    tracing::subscriber::with_default(subscriber, || async {
+        // Spans will be sent to the configured OpenTelemetry exporter
+        let root = span!(tracing::Level::TRACE, "starting", work_units = 2);
+        let _enter = root.enter();
+
+        core::bot::run().await.unwrap();
+    })
+    .await;
+}
+
+fn init_tracer(dsn: &str) -> Result<opentelemetry_sdk::trace::TracerProvider, TraceError> {
+    let resource = Resource::from_detectors(
+        Duration::from_secs(0),
+        vec![
+            Box::new(SdkProvidedResourceDetector),
+            Box::new(EnvResourceDetector::new()),
+            Box::new(TelemetryResourceDetector),
+        ],
+    );
+
+    let mut metadata = MetadataMap::with_capacity(1);
+    metadata.insert("uptrace-dsn", dsn.parse().unwrap());
+
+    opentelemetry_otlp::new_pipeline()
+        .tracing()
+        .with_exporter(
+            opentelemetry_otlp::new_exporter()
+                .tonic()
+                .with_endpoint("https://otlp.uptrace.dev:4317")
+                .with_timeout(Duration::from_secs(5))
+                .with_metadata(metadata),
+        )
+        .with_batch_config(
+            opentelemetry_sdk::trace::BatchConfigBuilder::default()
+                .with_max_queue_size(30000)
+                .with_max_export_batch_size(10000)
+                .with_scheduled_delay(Duration::from_millis(5000))
+                .build(),
+        )
+        .with_trace_config(Config::default().with_resource(resource))
+        .install_batch(opentelemetry_sdk::runtime::Tokio)
 }
