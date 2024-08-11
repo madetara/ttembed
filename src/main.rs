@@ -9,7 +9,6 @@ use opentelemetry_sdk::resource::{
 use opentelemetry_sdk::trace::Config;
 use opentelemetry_sdk::Resource;
 use tonic::metadata::MetadataMap;
-use tracing::span;
 use tracing_subscriber::fmt;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::Registry;
@@ -31,14 +30,11 @@ async fn main() {
         .with(telemetry)
         .with(fmt::Layer::default());
 
-    tracing::subscriber::with_default(subscriber, || async {
-        // Spans will be sent to the configured OpenTelemetry exporter
-        let root = span!(tracing::Level::TRACE, "starting", work_units = 2);
-        let _enter = root.enter();
+    tracing::subscriber::set_global_default(subscriber).unwrap();
 
-        core::bot::run().await.unwrap();
-    })
-    .await;
+    tracing::info!("starting");
+
+    core::bot::run().await.unwrap();
 }
 
 fn init_tracer(dsn: &str) -> Result<opentelemetry_sdk::trace::TracerProvider, TraceError> {
