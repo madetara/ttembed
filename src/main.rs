@@ -10,9 +10,10 @@ use opentelemetry_sdk::trace::Config;
 use opentelemetry_sdk::Resource;
 use tonic::metadata::MetadataMap;
 use tonic::transport::ClientTlsConfig;
+use tracing::level_filters::LevelFilter;
 use tracing_subscriber::fmt;
-use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::Registry;
+use tracing_subscriber::{filter, prelude::*};
 
 #[macro_use]
 extern crate lazy_static;
@@ -30,8 +31,8 @@ async fn main() {
     let telemetry = tracing_opentelemetry::layer().with_tracer(tracer);
 
     let subscriber = Registry::default()
-        .with(telemetry)
-        .with(fmt::Layer::default());
+        .with(telemetry.with_filter(LevelFilter::INFO))
+        .with(fmt::Layer::default().with_filter(LevelFilter::DEBUG));
 
     tracing::subscriber::set_global_default(subscriber).unwrap();
 
