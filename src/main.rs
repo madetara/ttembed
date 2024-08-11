@@ -58,7 +58,7 @@ fn init_tracer(dsn: &str) -> Result<opentelemetry_sdk::trace::TracerProvider, Tr
         .with_exporter(
             opentelemetry_otlp::new_exporter()
                 .tonic()
-                .with_tls_config(ClientTlsConfig::new())
+                .with_tls_config(ClientTlsConfig::new().with_native_roots())
                 .with_endpoint("https://otlp.uptrace.dev:4317")
                 .with_timeout(Duration::from_secs(5))
                 .with_metadata(metadata),
