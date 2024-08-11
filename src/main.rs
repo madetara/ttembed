@@ -10,6 +10,7 @@ use opentelemetry_sdk::trace::Config;
 use opentelemetry_sdk::Resource;
 use tonic::metadata::MetadataMap;
 use tracing::span;
+use tracing_subscriber::fmt;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::Registry;
 
@@ -26,7 +27,9 @@ async fn main() {
 
     let telemetry = tracing_opentelemetry::layer().with_tracer(tracer);
 
-    let subscriber = Registry::default().with(telemetry);
+    let subscriber = Registry::default()
+        .with(telemetry)
+        .with(fmt::Layer::default());
 
     tracing::subscriber::with_default(subscriber, || async {
         // Spans will be sent to the configured OpenTelemetry exporter
