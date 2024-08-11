@@ -21,6 +21,8 @@ mod core;
 
 #[tokio::main]
 async fn main() {
+    openssl_probe::init_ssl_cert_env_vars();
+
     let dsn = std::env::var("UPTRACE_DSN").expect("UPTRACE_DSN not set");
     let tracer_provider = init_tracer(dsn.as_str()).expect("failed to initialize tracer");
     let tracer = tracer_provider.tracer("ttembed");
