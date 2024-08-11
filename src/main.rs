@@ -9,6 +9,7 @@ use opentelemetry_sdk::resource::{
 use opentelemetry_sdk::trace::Config;
 use opentelemetry_sdk::Resource;
 use tonic::metadata::MetadataMap;
+use tonic::transport::ClientTlsConfig;
 use tracing_subscriber::fmt;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::Registry;
@@ -55,6 +56,7 @@ fn init_tracer(dsn: &str) -> Result<opentelemetry_sdk::trace::TracerProvider, Tr
         .with_exporter(
             opentelemetry_otlp::new_exporter()
                 .tonic()
+                .with_tls_config(ClientTlsConfig::new())
                 .with_endpoint("https://otlp.uptrace.dev:4317")
                 .with_timeout(Duration::from_secs(5))
                 .with_metadata(metadata),
