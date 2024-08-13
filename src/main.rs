@@ -7,13 +7,14 @@ use opentelemetry_sdk::resource::{
     EnvResourceDetector, SdkProvidedResourceDetector, TelemetryResourceDetector,
 };
 use opentelemetry_sdk::trace::Config;
+use opentelemetry_sdk::trace::RandomIdGenerator;
 use opentelemetry_sdk::Resource;
 use tonic::metadata::MetadataMap;
 use tonic::transport::ClientTlsConfig;
 use tracing::level_filters::LevelFilter;
 use tracing_subscriber::fmt;
+use tracing_subscriber::prelude::*;
 use tracing_subscriber::Registry;
-use tracing_subscriber::{filter, prelude::*};
 
 #[macro_use]
 extern crate lazy_static;
@@ -71,6 +72,10 @@ fn init_tracer(dsn: &str) -> Result<opentelemetry_sdk::trace::TracerProvider, Tr
                 .with_scheduled_delay(Duration::from_millis(5000))
                 .build(),
         )
-        .with_trace_config(Config::default().with_resource(resource))
+        .with_trace_config(
+            Config::default()
+                .with_resource(resource)
+                .with_id_generator(RandomIdGenerator::default()),
+        )
         .install_batch(opentelemetry_sdk::runtime::Tokio)
 }

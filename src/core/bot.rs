@@ -4,7 +4,6 @@ use anyhow::Result;
 use teloxide::{prelude::*, types::InputFile, update_listeners::webhooks};
 use tokio::fs;
 use tracing::instrument;
-use ulid::Ulid;
 use url::Url;
 
 use crate::core::downloader::ytdl;
@@ -46,7 +45,7 @@ pub async fn run() -> Result<()> {
     Ok(())
 }
 
-#[instrument(skip(bot, msg), fields(chat_id = %msg.chat.id, trace_id = Ulid::new().to_string()))]
+#[instrument(skip(bot, msg), fields(chat_id = %msg.chat.id))]
 async fn handle_message(bot: &Bot, msg: &Message) {
     tracing::info!("handling message");
     if let Some(text) = msg.text() {
@@ -72,27 +71,50 @@ async fn handle_download_via_file(bot: &Bot, msg: &Message, url: &url::Url) {
                         {
                             Ok(_) => {}
                             Err(err) => {
-                                tracing::error!("failed to send video. error: {err}");
+                                tracing::error!(
+                                    "failed to send video. error: {error}",
+                                    error = err
+                                );
                             }
                         }
                     }
                 }
                 Err(err) => {
-                    tracing::warn!("failed to get metadata for file {filename}. error: {err}");
+                    tracing::warn!(
+                        "failed to get metadata for file {filename}. error: {error}",
+                        error = err
+                    );
                 }
             }
 
-            match fs::remove_file(&filename).await.err() {
-                Some(err) => {
-                    tracing::error!("failed to delete file. message: {err}");
+            match fs::try_exists(&filename).await {
+                Ok(true) => {
+                    tracing::info!("deleting file {filename}");
+                    match fs::remove_file(&filename).await.err() {
+                        Some(err) => {
+                            tracing::error!("failed to delete file. error: {error}", error = err);
+                        }
+                        None => {
+                            tracing::info!("deleted file {filename}");
+                        }
+                    }
                 }
-                None => {
-                    tracing::info!("deleted file {filename}");
+                Ok(false) => {
+                    tracing::info!("nothing to delete");
+                }
+                Err(err) => {
+                    tracing::error!(
+                        "failed to check file existence. error: {error}",
+                        error = err
+                    );
                 }
             }
         }
         Err(err) => {
-            tracing::warn!("error occurred while downloading {url}. error: {err}");
+            tracing::warn!(
+                "error occurred while downloading {url}. error: {error}",
+                error = err
+            );
         }
     }
 }
