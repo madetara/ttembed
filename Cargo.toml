@@ -17,6 +17,7 @@ anyhow = "1.0"
 lazy_static = "1.5"
 openssl-probe = "0.1"
 opentelemetry = "0.24"
+opentelemetry-appender-tracing = "0.5.0"
 opentelemetry-otlp = { version = "0.17", features = [
     "grpc-tonic",
     "tls",
@@ -38,3 +39,12 @@ tokio = { version = "1.39", features = [
 tonic = { version = "0.12", features = ["tls", "tls-roots"] }
 url = "2.5"
 uuid = "1.10"
+
+[lints.clippy]
+all = "deny"
+correctness = "warn"
+complexity = "warn"
+pedantic = "warn"
+nursery = "warn"
+perf = "warn"
+cargo = "allow"
