@@ -1,11 +1,7 @@
 use std::{collections::HashSet, env};
 
 use anyhow::Result;
-use teloxide::{
-    prelude::*,
-    types::{InputFile, ReplyParameters},
-    update_listeners::webhooks,
-};
+use teloxide::{prelude::*, types::InputFile, update_listeners::webhooks};
 use tokio::fs;
 use tracing::instrument;
 use url::Url;
@@ -35,7 +31,7 @@ pub async fn run() -> Result<()> {
     .await
     .expect("Webhook creation failed");
 
-    Box::pin(teloxide::repl_with_listener(
+    teloxide::repl_with_listener(
         bot,
         |bot: Bot, msg: Message| async move {
             handle_message(&bot, &msg).await;
@@ -43,7 +39,7 @@ pub async fn run() -> Result<()> {
             Ok(())
         },
         listener,
-    ))
+    )
     .await;
 
     Ok(())
@@ -70,7 +66,7 @@ async fn handle_download_via_file(bot: &Bot, msg: &Message, url: &url::Url) {
                     if metadata.len() <= MAX_SIZE {
                         match bot
                             .send_video(msg.chat.id, InputFile::file(&filename))
-                            .reply_parameters(ReplyParameters::new(msg.id))
+                            .reply_to_message_id(msg.id)
                             .await
                         {
                             Ok(_) => {}
