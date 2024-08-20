@@ -25,7 +25,7 @@ opentelemetry-otlp = { version = "0.17", features = [
 ] }
 opentelemetry_sdk = { version = "0.24", features = ["rt-tokio"] }
 opentelemetry-stdout = { version = "0.5.0", features = ["trace"] }
-teloxide = { version = "0.12", features = ["macros", "webhooks-axum"] }
+teloxide = { version = "0.13.0", features = ["macros", "webhooks-axum"] }
 tracing = "0.1"
 tracing-appender = "0.2"
 tracing-futures = "0.2"
@@ -42,9 +42,6 @@ uuid = "1.10"
 
 [lints.clippy]
 all = "deny"
-correctness = "warn"
-complexity = "warn"
 pedantic = "warn"
 nursery = "warn"
-perf = "warn"
 cargo = "allow"
