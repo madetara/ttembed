@@ -16,7 +16,7 @@ pub fn build_command(url: &url::Url, option: &DownloadOption) -> Command {
 
     add_domain_specific_options(&mut cmd, url);
 
-    cmd.arg("--max-filesize").arg("5G");
+    cmd.arg("--max-filesize").arg("500M");
 
     match option {
         DownloadOption::File(filename) => {
