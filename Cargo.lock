@@ -2259,7 +2259,6 @@ name = "ttembedder"
 version = "0.1.1"
 dependencies = [
  "anyhow",
- "lazy_static",
  "openssl-probe",
  "opentelemetry",
  "opentelemetry-appender-tracing",

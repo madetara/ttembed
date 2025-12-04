@@ -7,22 +7,21 @@ use opentelemetry::{
 use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
 use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::{
+    Resource,
     resource::{EnvResourceDetector, SdkProvidedResourceDetector, TelemetryResourceDetector},
     trace::{Config, RandomIdGenerator},
-    Resource,
 };
 use tonic::{metadata::MetadataMap, transport::ClientTlsConfig};
 use tracing::level_filters::LevelFilter;
-use tracing_subscriber::{fmt, prelude::*, Registry};
-
-#[macro_use]
-extern crate lazy_static;
+use tracing_subscriber::{Registry, fmt, prelude::*};
 
 mod core;
 
 #[tokio::main]
 async fn main() {
-    openssl_probe::init_ssl_cert_env_vars();
+    unsafe {
+        openssl_probe::init_openssl_env_vars();
+    }
 
     let dsn = std::env::var("UPTRACE_DSN").expect("UPTRACE_DSN not set");
     let tracer_provider = init_tracer(dsn.as_str()).expect("failed to initialize tracer");

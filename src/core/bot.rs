@@ -1,4 +1,4 @@
-use std::{collections::HashSet, env};
+use std::{collections::HashSet, env, sync::LazyLock};
 
 use anyhow::Result;
 use teloxide::{
@@ -124,8 +124,8 @@ async fn handle_download_via_file(bot: &Bot, msg: &Message, url: &url::Url) {
 }
 
 fn get_valid_links(text: &str) -> HashSet<Url> {
-    lazy_static! {
-        static ref ALLOWED_DOMAINS: HashSet<&'static str> = HashSet::from([
+    static ALLOWED_DOMAINS: LazyLock<HashSet<&'static str>> = LazyLock::new(|| {
+        HashSet::from([
             // tiktok
             "www.tiktok.com",
             "vt.tiktok.com",
@@ -156,22 +156,22 @@ fn get_valid_links(text: &str) -> HashSet<Url> {
             "www.reddit.com",
             "reddit.com",
             "www.redd.it",
-            "redd.it"
-        ]);
-    }
+            "redd.it",
+        ])
+    });
 
     tracing::info!("looking for links");
     let mut result = HashSet::new();
 
     for word in text.split_whitespace() {
-        if let Ok(url) = Url::parse(word) {
-            if let Some(domain) = url.domain() {
-                if !ALLOWED_DOMAINS.contains(domain) {
-                    continue;
-                }
-
-                result.insert(url);
+        if let Ok(url) = Url::parse(word)
+            && let Some(domain) = url.domain()
+        {
+            if !ALLOWED_DOMAINS.contains(domain) {
+                continue;
             }
+
+            result.insert(url);
         }
     }
 
