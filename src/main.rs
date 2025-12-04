@@ -1,15 +1,18 @@
 use std::time::Duration;
 
-use opentelemetry::{
-    logs::LogError,
-    trace::{TraceError, TracerProvider as _},
-};
+use opentelemetry::trace::TracerProvider as _;
 use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
-use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_otlp::{
+    LogExporterBuilder, SpanExporterBuilder, WithExportConfig, WithTonicConfig,
+};
 use opentelemetry_sdk::{
     Resource,
-    resource::{EnvResourceDetector, SdkProvidedResourceDetector, TelemetryResourceDetector},
-    trace::{Config, RandomIdGenerator},
+    logs::SdkLoggerProvider,
+    resource::{
+        EnvResourceDetector, ResourceDetector, SdkProvidedResourceDetector,
+        TelemetryResourceDetector,
+    },
+    trace::{RandomIdGenerator, SdkTracerProvider},
 };
 use tonic::{metadata::MetadataMap, transport::ClientTlsConfig};
 use tracing::level_filters::LevelFilter;
@@ -24,9 +27,9 @@ async fn main() {
     }
 
     let dsn = std::env::var("UPTRACE_DSN").expect("UPTRACE_DSN not set");
-    let tracer_provider = init_tracer(dsn.as_str()).expect("failed to initialize tracer");
+    let tracer_provider = init_tracer(dsn.as_str());
     let tracer = tracer_provider.tracer("ttembed");
-    let logger_provider = init_logger(dsn.as_str()).expect("failed to initialize logger");
+    let logger_provider = init_logger(dsn.as_str());
 
     let telemetry = tracing_opentelemetry::layer().with_tracer(tracer);
 
@@ -42,74 +45,55 @@ async fn main() {
     core::bot::run().await.unwrap();
 }
 
-fn init_tracer(dsn: &str) -> Result<opentelemetry_sdk::trace::TracerProvider, TraceError> {
-    let resource = Resource::from_detectors(
-        Duration::from_secs(0),
-        vec![
-            Box::new(SdkProvidedResourceDetector),
-            Box::new(EnvResourceDetector::new()),
-            Box::new(TelemetryResourceDetector),
-        ],
-    );
+fn init_tracer(dsn: &str) -> SdkTracerProvider {
+    let detectors: Vec<Box<dyn ResourceDetector>> = vec![
+        Box::new(SdkProvidedResourceDetector),
+        Box::new(EnvResourceDetector::new()),
+        Box::new(TelemetryResourceDetector),
+    ];
+    let resource = Resource::builder().with_detectors(&detectors).build();
 
     let mut metadata = MetadataMap::with_capacity(1);
     metadata.insert("uptrace-dsn", dsn.parse().unwrap());
 
-    opentelemetry_otlp::new_pipeline()
-        .tracing()
-        .with_exporter(
-            opentelemetry_otlp::new_exporter()
-                .tonic()
+    SdkTracerProvider::builder()
+        .with_batch_exporter(
+            SpanExporterBuilder::new()
+                .with_tonic()
                 .with_tls_config(ClientTlsConfig::new().with_native_roots())
                 .with_endpoint("https://otlp.uptrace.dev:4317")
                 .with_timeout(Duration::from_secs(5))
-                .with_metadata(metadata),
-        )
-        .with_batch_config(
-            opentelemetry_sdk::trace::BatchConfigBuilder::default()
-                .with_max_queue_size(30000)
-                .with_max_export_batch_size(10000)
-                .with_scheduled_delay(Duration::from_millis(5000))
-                .build(),
-        )
-        .with_trace_config(
-            Config::default()
-                .with_resource(resource)
-                .with_id_generator(RandomIdGenerator::default()),
-        )
-        .install_batch(opentelemetry_sdk::runtime::Tokio)
-}
-
-fn init_logger(dsn: &str) -> Result<opentelemetry_sdk::logs::LoggerProvider, LogError> {
-    let resource = Resource::from_detectors(
-        Duration::from_secs(0),
-        vec![
-            Box::new(SdkProvidedResourceDetector),
-            Box::new(EnvResourceDetector::new()),
-            Box::new(TelemetryResourceDetector),
-        ],
-    );
-
-    let mut metadata = MetadataMap::with_capacity(1);
-    metadata.insert("uptrace-dsn", dsn.parse().unwrap());
-
-    opentelemetry_otlp::new_pipeline()
-        .logging()
-        .with_exporter(
-            opentelemetry_otlp::new_exporter()
-                .tonic()
-                .with_tls_config(ClientTlsConfig::new().with_native_roots())
-                .with_endpoint("https://otlp.uptrace.dev:4317")
-                .with_timeout(Duration::from_secs(5))
-                .with_metadata(metadata.clone()),
-        )
-        .with_batch_config(
-            opentelemetry_sdk::logs::BatchConfigBuilder::default()
-                .with_max_queue_size(30000)
-                .with_max_export_batch_size(10000)
-                .with_scheduled_delay(Duration::from_millis(5000))
-                .build(),
+                .with_metadata(metadata)
+                .build()
+                .unwrap(),
         )
         .with_resource(resource)
-        .install_batch(opentelemetry_sdk::runtime::Tokio)
+        .with_id_generator(RandomIdGenerator::default())
+        .build()
+}
+
+fn init_logger(dsn: &str) -> SdkLoggerProvider {
+    let detectors: Vec<Box<dyn ResourceDetector>> = vec![
+        Box::new(SdkProvidedResourceDetector),
+        Box::new(EnvResourceDetector::new()),
+        Box::new(TelemetryResourceDetector),
+    ];
+    let resource = Resource::builder().with_detectors(&detectors).build();
+
+    let mut metadata = MetadataMap::with_capacity(1);
+    metadata.insert("uptrace-dsn", dsn.parse().unwrap());
+
+    SdkLoggerProvider::builder()
+        .with_batch_exporter(
+            LogExporterBuilder::new()
+                .with_tonic()
+                .with_tls_config(ClientTlsConfig::new().with_native_roots())
+                .with_endpoint("https://otlp.uptrace.dev:4317")
+                .with_timeout(Duration::from_secs(5))
+                .with_metadata(metadata.clone())
+                .build()
+                .unwrap(),
+        )
+        .with_resource(resource)
+        .build()
 }
